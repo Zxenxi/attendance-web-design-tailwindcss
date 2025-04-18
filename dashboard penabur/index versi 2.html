@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="id" x-data="presensiApp" x-init="init()">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Penabur Presensi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+
+    <style>
+      /* Gaya Scrollbar, Navigasi, Badge, dll. (Sama seperti sebelumnya) */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      .top-nav-item.active { background-color: #eef2ff; color: #4f46e5; font-weight: 600; }
+      .top-nav-item { color: #6b7280; transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; }
+      .top-nav-item:hover:not(.active) { background-color: #f3f4f6; color: #1f2937; }
+      .bottom-nav-container { height: 64px; }
+      .bottom-nav-item.active { color: #4f46e5; }
+      .bottom-nav-item:not(.active) { color: #6b7280; }
+      .bottom-nav-item:hover:not(.active) { color: #4f46e5; }
+      [x-cloak] { display: none !important; }
+      .detail-link, .notification-link { font-size: 0.75rem; color: #6b7280; margin-top: 8px; display: inline-flex; align-items: center; transition: color 0.2s ease; }
+      .detail-link:hover, .notification-link:hover { color: #4f46e5; }
+      .detail-link i, .notification-link i { width: 0.875rem; height: 0.875rem; margin-left: 4px; }
+      .notification-link i.leading-icon { margin-left: 0; margin-right: 4px; }
+      .status-badge { font-size: 0.7rem; font-weight: 500; padding: 2px 8px; border-radius: 9999px; text-transform: capitalize; white-space: nowrap; }
+      .badge-red { background-color: #fee2e2; color: #dc2626; }
+      .badge-yellow { background-color: #fef9c3; color: #f59e0b; }
+      .badge-orange { background-color: #ffedd5; color: #f97316; }
+      .badge-blue { background-color: #dbeafe; color: #3b82f6; }
+      .badge-green { background-color: #dcfce7; color: #16a34a; } /* Aktif */
+      .badge-gray { background-color: #f3f4f6; color: #6b7280; } /* Nonaktif */
+      .badge-purple { background-color: #ede9fe; color: #7c3aed; } /* Petugas Piket */
+      .badge-cyan { background-color: #cffafe; color: #0891b2; } /* Guru */
+      .badge-indigo { background-color: #e0e7ff; color: #4338ca; } /* Siswa */
+      canvas { max-width: 100%; height: auto; }
+      .user-table th, .user-table td, .class-table th, .class-table td { padding: 10px 16px; vertical-align: middle; white-space: nowrap; }
+      .user-table th, .class-table th { background-color: #f9fafb; font-weight: 600; color: #4b5563; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; text-align: left; }
+      .user-table th.text-center, .user-table td.text-center, .class-table th.text-center, .class-table td.text-center { text-align: center; }
+      .user-table th:first-child, .user-table td:first-child { padding-left: 16px; padding-right: 8px; width: 1%; }
+      .user-table th:last-child, .user-table td:last-child, .class-table th:last-child, .class-table td:last-child { padding-right: 16px; width: 1%; text-align: center; }
+      .user-table tbody tr:nth-child(even), .class-table tbody tr:nth-child(even) { background-color: #f9fafb; }
+      .user-table tbody tr:hover, .class-table tbody tr:hover { background-color: #f3f4f6; }
+      .user-table .action-button, .class-table .action-button { color: #9ca3af; padding: 4px; border-radius: 4px; transition: color 0.2s ease, background-color 0.2s ease; }
+      .user-table .action-button:hover, .class-table .action-button:hover { color: #4f46e5; background-color: #eef2ff; }
+      .user-table .action-button i, .class-table .action-button i { width: 1rem; height: 1rem; }
+      .user-table .role-badge { margin-left: 6px; margin-top: 4px; display: inline-block; }
+      .user-table .user-name-col p { line-height: 1.3; }
+      .user-table .user-avatar { width: 32px; height: 32px; border-radius: 9999px; object-fit: cover; flex-shrink: 0; ring: 1px solid #e5e7eb; }
+      .user-table input[type="checkbox"], .class-table input[type="checkbox"] { border-radius: 4px; border-color: #d1d5db; color: #4f46e5; transition: border-color 0.2s ease; }
+      .user-table input[type="checkbox"]:focus, .class-table input[type="checkbox"]:focus { ring: 2px; ring-offset: 0; ring-indigo-500; border-color: #4f46e5; }
+      .user-table input[type="checkbox"]:checked, .class-table input[type="checkbox"]:checked { border-color: #4f46e5; background-color: #4f46e5; }
+      .bulk-actions-dropdown { position: relative; }
+      .bulk-actions-dropdown-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 160px; background-color: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); z-index: 10; border: 1px solid #e5e7eb; overflow: hidden; }
+      .bulk-actions-dropdown:hover .bulk-actions-dropdown-menu, .bulk-actions-dropdown button:focus + .bulk-actions-dropdown-menu, .bulk-actions-dropdown button[aria-expanded='true'] + .bulk-actions-dropdown-menu { display: block; }
+      .bulk-actions-dropdown-item { display: block; width: 100%; padding: 8px 12px; font-size: 0.875rem; color: #374151; text-align: left; white-space: nowrap; background: none; border: none; cursor: pointer; }
+      .bulk-actions-dropdown-item:hover { background-color: #f3f4f6; }
+      .bulk-actions-dropdown-item.delete { color: #dc2626; }
+      .bulk-actions-dropdown-item.delete:hover { background-color: #fee2e2; }
+
+      /* Gaya Modal */
+      .modal-overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+      .modal-content { background-color: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+      .modal-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; margin-bottom: 16px; }
+      .modal-body { margin-bottom: 24px; }
+      .modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+      .form-label { display: block; margin-bottom: 4px; font-size: 0.875rem; font-weight: 500; color: #374151; }
+      .form-input, .form-select { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+      .form-input:focus, .form-select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); }
+      .form-group { margin-bottom: 16px; }
+    </style>
+  </head>
+  <body class="bg-gray-100 text-gray-900 antialiased font-sans">
+    <div class="flex flex-col min-h-screen">
+      <header
+        class="bg-white shadow-sm sticky top-0 z-30 border-b border-gray-200"
+        @click.away="isUserMenuOpen = false"
+      >
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="relative flex justify-between items-center h-16">
+            <div class="flex-shrink-0 flex items-center">
+              <svg
+                class="h-8 w-auto text-indigo-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span
+                class="ml-2 text-xl font-bold text-gray-800 hidden sm:inline"
+                >Penabur Presensi</span
+              >
+              <span class="ml-2 text-lg font-bold text-gray-800 sm:hidden"
+                >Presensi</span
+              >
+            </div>
+            <div
+              class="hidden md:flex md:absolute md:inset-y-0 md:left-1/2 md:transform md:-translate-x-1/2"
+            >
+              <nav class="flex space-x-2" id="top-navigation">
+                <a
+                  href="#"
+                  @click.prevent="changeTab('dashboard')"
+                  class="top-nav-item flex items-center space-x-2 px-3 py-2 rounded-md text-sm"
+                  :class="{ 'active': activeTab === 'dashboard' }"
+                  :aria-current="activeTab === 'dashboard' ? 'page' : undefined"
+                  ><i data-lucide="layout-dashboard" class="w-4 h-4"></i
+                  ><span>Dashboard</span></a
+                >
+                <a
+                  href="#"
+                  @click.prevent="changeTab('pengguna')"
+                  class="top-nav-item flex items-center space-x-2 px-3 py-2 rounded-md text-sm"
+                  :class="{ 'active': activeTab === 'pengguna' }"
+                  :aria-current="activeTab === 'pengguna' ? 'page' : undefined"
+                  ><i data-lucide="users" class="w-4 h-4"></i
+                  ><span>Pengguna</span></a
+                >
+                <a
+                  href="#"
+                  @click.prevent="changeTab('kelas')"
+                  class="top-nav-item flex items-center space-x-2 px-3 py-2 rounded-md text-sm"
+                  :class="{ 'active': activeTab === 'kelas' }"
+                  :aria-current="activeTab === 'kelas' ? 'page' : undefined"
+                  ><i data-lucide="building" class="w-4 h-4"></i
+                  ><span>Kelas</span></a
+                >
+                <a
+                  href="#"
+                  @click.prevent="changeTab('laporan')"
+                  class="top-nav-item flex items-center space-x-2 px-3 py-2 rounded-md text-sm"
+                  :class="{ 'active': activeTab === 'laporan' }"
+                  :aria-current="activeTab === 'laporan' ? 'page' : undefined"
+                  ><i data-lucide="bar-chart-3" class="w-4 h-4"></i
+                  ><span>Laporan</span></a
+                >
+              </nav>
+            </div>
+            <div class="hidden sm:flex sm:items-center sm:ml-6">
+              <div class="flex items-center space-x-3">
+                <button
+                  type="button"
+                  title="Notifikasi"
+                  class="relative text-gray-400 hover:text-gray-600 focus:outline-none p-1.5 rounded-full hover:bg-gray-100"
+                >
+                  <span class="sr-only">Notifikasi</span
+                  ><i data-lucide="bell" class="w-5 h-5"></i>
+                  <span
+                    class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-1 ring-white"
+                  ></span>
+                </button>
+                <div class="relative">
+                  <button
+                    @click="isUserMenuOpen = !isUserMenuOpen"
+                    type="button"
+                    class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    id="user-menu-button"
+                    :aria-expanded="isUserMenuOpen.toString()"
+                    aria-haspopup="true"
+                  >
+                    <span class="sr-only">Buka menu user</span>
+                    <img
+                      class="h-8 w-8 rounded-full object-cover ring-1 ring-gray-300"
+                      src="https://placehold.co/100x100/6366F1/FFFFFF?text=A"
+                      alt="Admin Avatar"
+                      onerror="this.onerror=null; this.src='https://placehold.co/100x100/cccccc/ffffff?text=Err';"
+                    />
+                    <span
+                      class="hidden md:block ml-2 text-sm font-medium text-gray-700"
+                      >Admin User</span
+                    >
+                    <i
+                      data-lucide="chevron-down"
+                      class="hidden md:block ml-1 h-4 w-4 text-gray-400"
+                    ></i>
+                  </button>
+                  <div
+                    x-show="isUserMenuOpen"
+                    x-cloak
+                    x-transition
+                    class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="user-menu-button"
+                    tabindex="-1"
+                  >
+                    <a
+                      href="#"
+                      class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                      tabindex="-1"
+                      ><i data-lucide="user-circle" class="w-4 h-4 mr-2"></i
+                      >Profil Anda</a
+                    >
+                    <a
+                      href="#"
+                      class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      role="menuitem"
+                      tabindex="-1"
+                      ><i data-lucide="settings" class="w-4 h-4 mr-2"></i
+                      >Pengaturan</a
+                    >
+                    <a
+                      href="#"
+                      class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                      role="menuitem"
+                      tabindex="-1"
+                      ><i data-lucide="log-out" class="w-4 h-4 mr-2"></i
+                      >Keluar</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center sm:hidden">
+              <button
+                @click="isMobileMenuOpen = !isMobileMenuOpen"
+                id="mobile-menu-button"
+                type="button"
+                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                aria-controls="mobile-menu"
+                :aria-expanded="isMobileMenuOpen.toString()"
+              >
+                <span class="sr-only">Buka menu utama</span>
+                <i
+                  x-show="!isMobileMenuOpen"
+                  data-lucide="menu"
+                  class="block h-6 w-6"
+                  aria-hidden="true"
+                ></i>
+                <i
+                  x-show="isMobileMenuOpen"
+                  data-lucide="x"
+                  class="block h-6 w-6"
+                  x-cloak
+                  aria-hidden="true"
+                ></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          x-show="isMobileMenuOpen"
+          x-cloak
+          class="sm:hidden border-t border-gray-200"
+          id="mobile-menu"
+          x-transition
+        >
+          <div class="px-2 pt-2 pb-3 space-y-1">
+            <a
+              href="#"
+              @click.prevent="changeTab('dashboard')"
+              class="flex items-center space-x-2 block px-3 py-2 rounded-md text-base font-medium"
+              :class="activeTab === 'dashboard' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              :aria-current="activeTab === 'dashboard' ? 'page' : undefined"
+              ><i data-lucide="layout-dashboard" class="w-5 h-5"></i
+              ><span>Dashboard</span></a
+            >
+            <a
+              href="#"
+              @click.prevent="changeTab('pengguna')"
+              class="flex items-center space-x-2 block px-3 py-2 rounded-md text-base font-medium"
+              :class="activeTab === 'pengguna' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              :aria-current="activeTab === 'pengguna' ? 'page' : undefined"
+              ><i data-lucide="users" class="w-5 h-5"></i
+              ><span>Pengguna</span></a
+            >
+            <a
+              href="#"
+              @click.prevent="changeTab('kelas')"
+              class="flex items-center space-x-2 block px-3 py-2 rounded-md text-base font-medium"
+              :class="activeTab === 'kelas' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              :aria-current="activeTab === 'kelas' ? 'page' : undefined"
+              ><i data-lucide="building" class="w-5 h-5"></i
+              ><span>Kelas</span></a
+            >
+            <a
+              href="#"
+              @click.prevent="changeTab('laporan')"
+              class="flex items-center space-x-2 block px-3 py-2 rounded-md text-base font-medium"
+              :class="activeTab === 'laporan' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+              :aria-current="activeTab === 'laporan' ? 'page' : undefined"
+              ><i data-lucide="bar-chart-3" class="w-5 h-5"></i
+              ><span>Laporan</span></a
+            >
+            <div class="border-t border-gray-100 pt-3 mt-2">
+              <a
+                href="#"
+                class="flex items-center space-x-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
+                ><i data-lucide="user-circle" class="w-5 h-5"></i
+                ><span>Profil Anda</span></a
+              >
+              <a
+                href="#"
+                class="flex items-center space-x-2 text-red-600 hover:bg-gray-50 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium"
+                ><i data-lucide="log-out" class="w-5 h-5"></i
+                ><span>Keluar</span></a
+              >
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <div x-show="activeTab === 'dashboard'" x-cloak>
+          <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+            <div
+              class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+            >
+              <div>
+                <h1 class="text-2xl font-semibold text-gray-800">
+                  Selamat Datang, Admin!
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                  Ringkasan data presensi hari ini (<span id="last-updated-time"
+                    >Memuat...</span
+                  >)
+                </p>
+              </div>
+              <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                <select
+                  x-model="dashboardUserType"
+                  title="Tipe Pengguna Dashboard"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option value="siswa">Siswa</option>
+                  <option value="guru">Guru</option>
+                  <option value="semua">Semua</option>
+                </select>
+                <select
+                  title="Filter Kelas"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option>Semua Kelas</option>
+                  <option>Kelas 10</option>
+                  <option>Kelas 11</option>
+                  <option>Kelas 12</option>
+                </select>
+                <select
+                  title="Filter Rentang Waktu"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option>Hari Ini</option>
+                  <option>7 Hari Terakhir</option>
+                  <option>Bulan Ini</option>
+                </select>
+                <div class="relative">
+                  <input
+                    type="text"
+                    placeholder="Cari nama..."
+                    class="text-sm pl-8 pr-2 py-1.5 rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-36"
+                  />
+                  <i
+                    data-lucide="search"
+                    class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                  ></i>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div
+                class="bg-white p-5 rounded-xl shadow-md border border-gray-200"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <h3
+                    class="text-sm font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Total Siswa
+                  </h3>
+                  <span class="flex-shrink-0 p-1.5 rounded-full bg-indigo-100"
+                    ><i data-lucide="users" class="h-5 w-5 text-indigo-600"></i
+                  ></span>
+                </div>
+                <p class="text-3xl font-bold text-gray-900">1250</p>
+                <p class="text-xs text-gray-500 mt-1">Siswa Aktif</p>
+              </div>
+              <div
+                class="bg-white p-5 rounded-xl shadow-md border border-gray-200"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <h3
+                    class="text-sm font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Kehadiran Siswa (Hari Ini)
+                  </h3>
+                  <span class="flex-shrink-0 p-1.5 rounded-full bg-green-100"
+                    ><i
+                      data-lucide="user-check"
+                      class="h-5 w-5 text-green-600"
+                    ></i
+                  ></span>
+                </div>
+                <p class="text-3xl font-bold text-green-600">95.6%</p>
+                <div class="text-xs mt-1 space-x-2">
+                  <span class="text-gray-500">Hadir: 1195</span>
+                  <span class="text-red-500">Absen: 25</span>
+                  <span class="text-yellow-500">Izin: 15</span>
+                  <span class="text-orange-500">Telat: 15</span>
+                </div>
+              </div>
+              <div
+                class="bg-white p-5 rounded-xl shadow-md border border-gray-200"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <h3
+                    class="text-sm font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Total Guru
+                  </h3>
+                  <span class="flex-shrink-0 p-1.5 rounded-full bg-blue-100"
+                    ><i
+                      data-lucide="briefcase"
+                      class="h-5 w-5 text-blue-600"
+                    ></i
+                  ></span>
+                </div>
+                <p class="text-3xl font-bold text-gray-900">75</p>
+                <p class="text-xs text-gray-500 mt-1">Guru Aktif</p>
+              </div>
+              <div
+                class="bg-white p-5 rounded-xl shadow-md border border-gray-200"
+              >
+                <div class="flex justify-between items-start mb-2">
+                  <h3
+                    class="text-sm font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    Kehadiran Guru (Hari Ini)
+                  </h3>
+                  <span class="flex-shrink-0 p-1.5 rounded-full bg-cyan-100"
+                    ><i
+                      data-lucide="clipboard-check"
+                      class="h-5 w-5 text-cyan-600"
+                    ></i
+                  ></span>
+                </div>
+                <p class="text-3xl font-bold text-cyan-600">93.3%</p>
+                <div class="text-xs mt-1 space-x-2">
+                  <span class="text-gray-500">Hadir: 70</span>
+                  <span class="text-red-500">Absen: 2</span>
+                  <span class="text-yellow-500">Izin: 1</span>
+                  <span class="text-orange-500">Telat: 2</span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2 space-y-6">
+                <div
+                  class="bg-white p-5 sm:p-6 rounded-xl shadow-md border border-gray-200"
+                >
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                      Tren Kehadiran Bulanan
+                      <span x-show="dashboardUserType === 'siswa'">(Siswa)</span
+                      ><span x-show="dashboardUserType === 'guru'">(Guru)</span
+                      ><span x-show="dashboardUserType === 'semua'"
+                        >(Siswa & Guru)</span
+                      >
+                    </h3>
+                    <button
+                      title="Opsi"
+                      type="button"
+                      class="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100"
+                    >
+                      <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                    </button>
+                  </div>
+                  <div class="h-72 relative">
+                    <canvas id="totalAttendanceChart"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-6">
+                <div
+                  class="bg-white p-5 sm:p-6 rounded-xl shadow-md border border-gray-200"
+                >
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                      Tindakan Cepat
+                    </h3>
+                    <span class="p-1.5 rounded-full bg-orange-100"
+                      ><i
+                        data-lucide="alert-triangle"
+                        class="h-5 w-5 text-orange-600"
+                      ></i
+                    ></span>
+                  </div>
+                  <ul class="space-y-3">
+                    <li class="flex items-center justify-between">
+                      <a href="#" class="notification-link"
+                        ><i data-lucide="mail" class="w-4 h-4 leading-icon"></i
+                        ><span>3 Permintaan Izin Baru</span></a
+                      ><span class="text-xs text-gray-400">Hari Ini</span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <a href="#" class="notification-link"
+                        ><i
+                          data-lucide="user-x"
+                          class="w-4 h-4 leading-icon"
+                        ></i
+                        ><span>Laporan Ketidakhadiran > 3 Hari</span></a
+                      ><span class="text-xs text-gray-400">Kemarin</span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <a href="#" class="notification-link"
+                        ><i
+                          data-lucide="calendar-check"
+                          class="w-4 h-4 leading-icon"
+                        ></i
+                        ><span>Jadwal Guru Pengganti</span></a
+                      ><span class="text-xs text-gray-400">Minggu Ini</span>
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  x-show="dashboardUserType === 'guru'"
+                  x-cloak
+                  class="bg-white p-5 sm:p-6 rounded-xl shadow-md border border-gray-200"
+                >
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                      Ringkasan Guru Hari Ini
+                    </h3>
+                    <button
+                      title="Opsi"
+                      type="button"
+                      class="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100"
+                    >
+                      <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                    </button>
+                  </div>
+                  <div class="h-60 flex justify-center items-center relative">
+                    <canvas id="teacherSummaryChart"></canvas>
+                  </div>
+                </div>
+                <div
+                  x-show="dashboardUserType === 'guru'"
+                  x-cloak
+                  class="bg-white p-5 sm:p-6 rounded-xl shadow-md border border-gray-200"
+                >
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                      Guru Tidak Hadir Hari Ini
+                    </h3>
+                    <a href="#" class="text-xs text-indigo-600 hover:underline"
+                      >Lihat Semua</a
+                    >
+                  </div>
+                  <ul class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    <li
+                      class="flex items-center justify-between space-x-3 p-2 rounded-md hover:bg-gray-50"
+                    >
+                      <div class="flex items-center space-x-3 min-w-0">
+                        <img
+                          class="h-9 w-9 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-200"
+                          src="https://placehold.co/100x100/F87171/FFFFFF?text=BU"
+                          alt="Budi Santoso"
+                        />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate">
+                            Budi Santoso
+                          </p>
+                          <p class="text-xs text-gray-500 truncate">
+                            Matematika
+                          </p>
+                        </div>
+                      </div>
+                      <span class="status-badge badge-red flex-shrink-0"
+                        >Absen</span
+                      >
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  x-show="dashboardUserType === 'siswa'"
+                  x-cloak
+                  class="bg-white p-5 sm:p-6 rounded-xl shadow-md border border-gray-200"
+                >
+                  <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                      Siswa Tidak Hadir Hari Ini
+                    </h3>
+                    <a href="#" class="text-xs text-indigo-600 hover:underline"
+                      >Lihat Semua</a
+                    >
+                  </div>
+                  <ul class="space-y-3 max-h-72 overflow-y-auto pr-2">
+                    <li
+                      class="flex items-center justify-between space-x-3 p-2 rounded-md hover:bg-gray-50"
+                    >
+                      <div class="flex items-center space-x-3 min-w-0">
+                        <img
+                          class="h-9 w-9 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-200"
+                          src="https://placehold.co/100x100/FCA5A5/FFFFFF?text=RA"
+                          alt="Rani A."
+                        />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate">
+                            Rani Agustina
+                          </p>
+                          <p class="text-xs text-gray-500 truncate">
+                            Kelas 11 IPA 2
+                          </p>
+                        </div>
+                      </div>
+                      <span class="status-badge badge-red flex-shrink-0"
+                        >Absen</span
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div x-show="activeTab === 'pengguna'" x-cloak>
+          <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+            <div
+              class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+            >
+              <div>
+                <h1 class="text-2xl font-semibold text-gray-800">
+                  Manajemen Pengguna
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                  Kelola data siswa, guru, dan petugas piket.
+                </p>
+              </div>
+              <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                <div
+                  x-data="{ open: false }"
+                  class="relative bulk-actions-dropdown"
+                  x-show="selectedUserIds.length > 0"
+                  x-transition
+                >
+                  <button
+                    @click="open = !open"
+                    :aria-expanded="open.toString()"
+                    type="button"
+                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500"
+                  >
+                    <span
+                      >Aksi Massal (<span x-text="selectedUserIds.length"></span
+                      >)</span
+                    >
+                    <i
+                      data-lucide="chevron-down"
+                      class="w-4 h-4 ml-1.5 -mr-1"
+                    ></i>
+                  </button>
+                  <div
+                    x-show="open"
+                    @click.away="open = false"
+                    x-transition
+                    class="bulk-actions-dropdown-menu"
+                  >
+                    <button
+                      @click="applyBulkAction('activate'); open = false;"
+                      type="button"
+                      class="bulk-actions-dropdown-item"
+                    >
+                      Aktifkan
+                    </button>
+                    <button
+                      @click="applyBulkAction('deactivate'); open = false;"
+                      type="button"
+                      class="bulk-actions-dropdown-item"
+                    >
+                      Nonaktifkan
+                    </button>
+                    <button
+                      @click="applyBulkAction('delete'); open = false;"
+                      type="button"
+                      class="bulk-actions-dropdown-item delete"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+                <select
+                  x-model="userManagementFilterType"
+                  title="Filter Tipe Pengguna"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option value="semua">Semua Tipe</option>
+                  <option value="siswa">Siswa</option>
+                  <option value="guru">Guru</option>
+                  <option value="petugas_piket">Petugas Piket</option>
+                </select>
+                <select
+                  title="Filter Kelas"
+                  x-show="userManagementFilterType === 'siswa' || userManagementFilterType === 'semua'"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option>Semua Kelas</option>
+                  <option>Kelas 10</option>
+                  <option>Kelas 11</option>
+                  <option>Kelas 12</option>
+                </select>
+                <select
+                  x-model="userManagementStatusFilter"
+                  title="Filter Status"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option value="">Semua Status</option>
+                  <option value="aktif">Aktif</option>
+                  <option value="nonaktif">Nonaktif</option>
+                </select>
+                <div class="relative">
+                  <input
+                    x-model.debounce.300ms="userManagementSearchQuery"
+                    type="text"
+                    placeholder="Cari nama/ID..."
+                    class="text-sm pl-8 pr-2 py-1.5 rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-40"
+                  />
+                  <i
+                    data-lucide="search"
+                    class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                  ></i>
+                </div>
+                <button
+                  type="button"
+                  class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <i data-lucide="plus" class="w-4 h-4 mr-1.5 -ml-1"></i> Tambah
+                  Pengguna
+                </button>
+              </div>
+            </div>
+            <div
+              class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 user-table">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col" class="text-center">
+                        <input
+                          type="checkbox"
+                          title="Pilih Semua yang Terfilter"
+                          class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+                          :checked="selectAllUsers && filteredUsers.length > 0"
+                          @change="selectAllFilteredUsers($event.target.checked)"
+                          :disabled="filteredUsers.length === 0"
+                        />
+                      </th>
+                      <th scope="col">Nama</th>
+                      <th scope="col">ID Pengguna</th>
+                      <th scope="col">Role</th>
+                      <th scope="col">Kelas/Info</th>
+                      <th scope="col" class="text-center">Status</th>
+                      <th scope="col" class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="user in filteredUsers" :key="user.id">
+                      <tr>
+                        <td class="text-center">
+                          <input
+                            type="checkbox"
+                            :value="user.id"
+                            x-model="selectedUserIds"
+                            class="form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out"
+                          />
+                        </td>
+                        <td>
+                          <div class="flex items-center space-x-3">
+                            <img
+                              class="user-avatar"
+                              :src="user.avatar"
+                              :alt="user.name + ' avatar'"
+                              onerror="this.onerror=null; this.src='https://placehold.co/100x100/cccccc/ffffff?text=Err';"
+                            />
+                            <div class="min-w-0 user-name-col">
+                              <p
+                                class="text-sm font-medium text-gray-900 truncate"
+                                x-text="user.name"
+                              ></p>
+                              <p
+                                class="text-xs text-gray-500 truncate"
+                                x-text="user.email"
+                              ></p>
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          class="text-sm text-gray-500"
+                          x-text="user.userId"
+                        ></td>
+                        <td class="text-sm text-gray-500">
+                          <span
+                            class="status-badge"
+                            :class="user.roleBadge"
+                            x-text="user.role"
+                          ></span
+                          ><span
+                            x-show="user.role2"
+                            class="status-badge role-badge"
+                            :class="user.role2Badge"
+                            x-text="user.role2"
+                          ></span>
+                        </td>
+                        <td
+                          class="text-sm text-gray-500"
+                          x-text="user.class"
+                        ></td>
+                        <td class="text-center">
+                          <span
+                            class="status-badge"
+                            :class="user.statusBadge"
+                            x-text="user.status"
+                          ></span>
+                        </td>
+                        <td class="text-center">
+                          <div
+                            class="flex justify-center items-center space-x-1"
+                          >
+                            <button
+                              @click="viewUser(user.id)"
+                              title="Lihat Detail"
+                              class="action-button"
+                            >
+                              <i data-lucide="eye"></i></button
+                            ><button
+                              @click="editUser(user.id)"
+                              title="Edit"
+                              class="action-button"
+                            >
+                              <i data-lucide="edit-2"></i></button
+                            ><button
+                              @click="deleteUser(user.id)"
+                              title="Hapus"
+                              class="action-button text-red-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <i data-lucide="trash-2"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                    <tr x-show="filteredUsers.length === 0">
+                      <td colspan="7" class="text-center py-10 text-gray-500">
+                        Tidak ada pengguna yang cocok dengan filter saat ini.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div
+                class="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
+              >
+                <div class="flex-1 flex justify-between sm:hidden">
+                  <a
+                    href="#"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >Previous</a
+                  ><a
+                    href="#"
+                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >Next</a
+                  >
+                </div>
+                <div
+                  class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p class="text-sm text-gray-700">
+                      Menampilkan
+                      <span
+                        class="font-medium"
+                        x-text="filteredUsers.length > 0 ? 1 : 0"
+                      ></span>
+                      sampai
+                      <span
+                        class="font-medium"
+                        x-text="Math.min(10, filteredUsers.length)"
+                      ></span>
+                      dari
+                      <span
+                        class="font-medium"
+                        x-text="filteredUsers.length"
+                      ></span>
+                      hasil
+                    </p>
+                  </div>
+                  <div>
+                    <nav
+                      class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                      aria-label="Pagination"
+                    >
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                        ><span class="sr-only">Previous</span
+                        ><i data-lucide="chevron-left" class="h-5 w-5"></i></a
+                      ><a
+                        href="#"
+                        aria-current="page"
+                        class="z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                        >1</a
+                      ><a
+                        href="#"
+                        class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                        >2</a
+                      ><span
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                        >...</span
+                      ><a
+                        href="#"
+                        class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                        >10</a
+                      ><a
+                        href="#"
+                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                        ><span class="sr-only">Next</span
+                        ><i data-lucide="chevron-right" class="h-5 w-5"></i
+                      ></a>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div x-show="activeTab === 'kelas'" x-cloak>
+          <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+            <div
+              class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+            >
+              <div>
+                <h1 class="text-2xl font-semibold text-gray-800">
+                  Manajemen Kelas
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                  Kelola data kelas di sekolah.
+                </p>
+              </div>
+              <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                <select
+                  title="Filter Tingkat"
+                  class="text-sm rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+                >
+                  <option value="">Semua Tingkat</option>
+                  <option value="10">Kelas 10</option>
+                  <option value="11">Kelas 11</option>
+                  <option value="12">Kelas 12</option>
+                </select>
+                <div class="relative">
+                  <input
+                    x-model.debounce.300ms="classSearchQuery"
+                    type="text"
+                    placeholder="Cari kelas/wali..."
+                    class="text-sm pl-8 pr-2 py-1.5 rounded-lg border-gray-300 bg-white text-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm w-40"
+                  />
+                  <i
+                    data-lucide="search"
+                    class="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                  ></i>
+                </div>
+                <button
+                  @click="openCreateClassModal()"
+                  type="button"
+                  class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <i data-lucide="plus" class="w-4 h-4 mr-1.5 -ml-1"></i> Tambah
+                  Kelas
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 class-table">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th scope="col">Nama Kelas</th>
+                      <th scope="col" class="text-center">Tingkat</th>
+                      <th scope="col">Jurusan</th>
+                      <th scope="col">Wali Kelas</th>
+                      <th scope="col" class="text-center">Jumlah Siswa</th>
+                      <th scope="col" class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="kelas in filteredClasses" :key="kelas.id">
+                      <tr>
+                        <td
+                          class="text-sm font-medium text-gray-900"
+                          x-text="kelas.nama"
+                        ></td>
+                        <td
+                          class="text-sm text-gray-500 text-center"
+                          x-text="kelas.tingkat"
+                        ></td>
+                        <td
+                          class="text-sm text-gray-500"
+                          x-text="kelas.jurusan"
+                        ></td>
+                        <td
+                          class="text-sm text-gray-500"
+                          x-text="kelas.waliKelas || '-'"
+                        ></td>
+                        <td
+                          class="text-sm text-gray-500 text-center"
+                          x-text="kelas.jumlahSiswa"
+                        ></td>
+                        <td class="text-center">
+                          <div
+                            class="flex justify-center items-center space-x-1"
+                          >
+                            <button
+                              @click="openEditClassModal(kelas.id)"
+                              title="Edit Kelas"
+                              class="action-button"
+                            >
+                              <i data-lucide="edit-2"></i>
+                            </button>
+                            <button
+                              @click="deleteClass(kelas.id)"
+                              title="Hapus Kelas"
+                              class="action-button text-red-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              <i data-lucide="trash-2"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                    <tr x-show="filteredClasses.length === 0">
+                      <td colspan="6" class="text-center py-10 text-gray-500">
+                        Tidak ada data kelas yang ditemukan.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div
+                class="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
+              >
+                <div class="flex-1 flex justify-between sm:hidden">
+                  <a
+                    href="#"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >Previous</a
+                  >
+                  <a
+                    href="#"
+                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    >Next</a
+                  >
+                </div>
+                <div
+                  class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p class="text-sm text-gray-700">
+                      Menampilkan
+                      <span
+                        class="font-medium"
+                        x-text="filteredClasses.length > 0 ? 1 : 0"
+                      ></span>
+                      sampai
+                      <span
+                        class="font-medium"
+                        x-text="Math.min(10, filteredClasses.length)"
+                      ></span>
+                      dari
+                      <span
+                        class="font-medium"
+                        x-text="filteredClasses.length"
+                      ></span>
+                      hasil
+                    </p>
+                  </div>
+                  <div>
+                    <nav
+                      class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                      aria-label="Pagination"
+                    >
+                      <a
+                        href="#"
+                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                        ><span class="sr-only">Previous</span
+                        ><i data-lucide="chevron-left" class="h-5 w-5"></i></a
+                      ><a
+                        href="#"
+                        aria-current="page"
+                        class="z-10 bg-indigo-50 border-indigo-500 text-indigo-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium"
+                        >1</a
+                      ><a
+                        href="#"
+                        class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                        ><span class="sr-only">Next</span
+                        ><i data-lucide="chevron-right" class="h-5 w-5"></i
+                      ></a>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div x-show="activeTab === 'laporan'" x-cloak>
+          <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+            <h1 class="text-2xl font-semibold text-gray-800">
+              Laporan Presensi
+            </h1>
+            <p class="text-gray-600">
+              Konten untuk laporan presensi akan ditampilkan di sini.
+            </p>
+            <div
+              class="bg-white p-6 rounded-xl shadow-md border border-gray-200"
+            >
+              <p>Fitur laporan sedang dalam pengembangan.</p>
+            </div>
+          </div>
+        </div>
+
+        <footer
+          class="p-4 text-center text-sm text-gray-500 border-t border-gray-200 mt-auto"
+        >
+          &copy; <span id="current-year">2024</span> Penabur Presensi. Hak Cipta
+          Dilindungi.
+        </footer>
+      </main>
+
+      <div class="md:hidden fixed bottom-0 inset-x-0 z-20">
+        <nav
+          class="relative bg-white border-t border-gray-200 shadow-lg bottom-nav-container"
+        >
+          <div
+            class="flex justify-around items-center h-full max-w-md mx-auto px-2"
+            id="bottom-navigation"
+          >
+            <a
+              href="#"
+              @click.prevent="changeTab('dashboard')"
+              class="bottom-nav-item flex flex-col items-center justify-center w-1/4 pt-1"
+              :class="{ 'active': activeTab === 'dashboard' }"
+              :aria-current="activeTab === 'dashboard' ? 'page' : undefined"
+              ><i data-lucide="layout-dashboard" class="h-5 w-5 mb-1"></i
+              ><span class="text-xs font-medium">Dashboard</span></a
+            >
+            <a
+              href="#"
+              @click.prevent="changeTab('pengguna')"
+              class="bottom-nav-item flex flex-col items-center justify-center w-1/4 pt-1"
+              :class="{ 'active': activeTab === 'pengguna' }"
+              :aria-current="activeTab === 'pengguna' ? 'page' : undefined"
+              ><i data-lucide="users" class="h-5 w-5 mb-1"></i
+              ><span class="text-xs font-medium">Pengguna</span></a
+            >
+            <a
+              href="#"
+              @click.prevent="changeTab('laporan')"
+              class="bottom-nav-item flex flex-col items-center justify-center w-1/4 pt-1"
+              :class="{ 'active': activeTab === 'laporan' }"
+              :aria-current="activeTab === 'laporan' ? 'page' : undefined"
+              ><i data-lucide="bar-chart-3" class="h-5 w-5 mb-1"></i
+              ><span class="text-xs font-medium">Laporan</span></a
+            >
+            <a
+              href="#"
+              @click.prevent="changeTab('kelas')"
+              class="bottom-nav-item flex flex-col items-center justify-center w-1/4 pt-1"
+              :class="{ 'active': activeTab === 'kelas' }"
+              :aria-current="activeTab === 'kelas' ? 'page' : undefined"
+              ><i data-lucide="building" class="h-5 w-5 mb-1"></i
+              ><span class="text-xs font-medium">Kelas</span></a
+            >
+          </div>
+        </nav>
+      </div>
+
+      <div
+        x-show="isClassModalOpen"
+        x-cloak
+        class="modal-overlay"
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+      >
+        <div class="modal-content" @click.away="closeClassModal()">
+          <h3
+            class="modal-title"
+            x-text="isEditingClass ? 'Edit Kelas' : 'Tambah Kelas Baru'"
+          ></h3>
+          <div class="modal-body">
+            <form @submit.prevent="saveClass()">
+              <div class="form-group">
+                <label for="namaKelas" class="form-label">Nama Kelas</label>
+                <input
+                  type="text"
+                  id="namaKelas"
+                  x-model="currentClass.nama"
+                  class="form-input"
+                  placeholder="Contoh: 10 IPA 1"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="tingkatKelas" class="form-label">Tingkat</label>
+                <select
+                  id="tingkatKelas"
+                  x-model.number="currentClass.tingkat"
+                  class="form-select"
+                  required
+                >
+                  <option value="" disabled>Pilih Tingkat</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="jurusanKelas" class="form-label">Jurusan</label>
+                <input
+                  type="text"
+                  id="jurusanKelas"
+                  x-model="currentClass.jurusan"
+                  class="form-input"
+                  placeholder="Contoh: IPA, IPS, Bahasa, Umum"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="waliKelas" class="form-label"
+                  >Wali Kelas (Opsional)</label
+                >
+                <input
+                  type="text"
+                  id="waliKelas"
+                  x-model="currentClass.waliKelas"
+                  class="form-input"
+                  placeholder="Nama Guru Wali Kelas"
+                />
+              </div>
+              <div class="form-group">
+                <label for="jumlahSiswa" class="form-label">Jumlah Siswa</label>
+                <input
+                  type="number"
+                  id="jumlahSiswa"
+                  x-model.number="currentClass.jumlahSiswa"
+                  class="form-input"
+                  placeholder="0"
+                  min="0"
+                  required
+                />
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  @click="closeClassModal()"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // --- Variabel Global Chart ---
+      window.totalAttendanceChartInstance = null;
+      window.teacherSummaryChartInstance = null;
+
+      // --- Fungsi Helper Warna Chart ---
+      const getChartColors = () => ({
+        textColor: "#374151",
+        gridColor: "rgba(0, 0, 0, 0.05)",
+        tooltipBg: "#ffffff",
+        tooltipText: "#1f2937",
+        doughnutBorder: "#ffffff",
+        barBgSiswa: "#4f46e5",
+        barBgGuru: "#06b6d4",
+        colorHadirGuru: "#10b981",
+        colorAbsenGuru: "#ef4444",
+        colorIzinGuru: "#f59e0b",
+        colorTerlambatGuru: "#f97316",
+      });
+
+      // --- Inisialisasi Chart.js (Global Scope) ---
+      window.initCharts = (selectedUserType) => {
+        /* ... (fungsi chart sama seperti sebelumnya) ... */
+      };
+
+      // --- Definisi Komponen Alpine.js ---
+      function presensiAppData() {
+        return {
+          // === State Aplikasi ===
+          dashboardUserType: "siswa",
+          activeTab: "dashboard",
+          isMobileMenuOpen: false,
+          isUserMenuOpen: false,
+
+          // === State Manajemen Pengguna ===
+          userManagementFilterType: "semua",
+          userManagementStatusFilter: "",
+          userManagementSearchQuery: "",
+          selectedUserIds: [],
+          selectAllUsers: false,
+          users: [
+            {
+              id: "user1",
+              name: "Andi Dwi Saputra",
+              email: "andi.dwi@email.com",
+              userId: "12345",
+              role: "siswa",
+              roleBadge: "badge-indigo",
+              class: "11 IPA 1",
+              status: "aktif",
+              statusBadge: "badge-green",
+              avatar: "https://placehold.co/100x100/818CF8/FFFFFF?text=AD",
+            },
+            {
+              id: "user2",
+              name: "Rani Agustina",
+              email: "rani.a@email.com",
+              userId: "12346",
+              role: "siswa",
+              roleBadge: "badge-indigo",
+              class: "11 IPA 2",
+              status: "aktif",
+              statusBadge: "badge-green",
+              avatar: "https://placehold.co/100x100/FCA5A5/FFFFFF?text=RA",
+            },
+            {
+              id: "user3",
+              name: "Anita Dewi",
+              email: "anita.d@guru.id",
+              userId: "G002",
+              role: "guru",
+              roleBadge: "badge-cyan",
+              class: "-",
+              status: "aktif",
+              statusBadge: "badge-green",
+              avatar: "https://placehold.co/100x100/FBBF24/000000?text=AN",
+            },
+            {
+              id: "user4",
+              name: "Budi Santoso",
+              email: "budi.s@guru.id",
+              userId: "G001",
+              role: "guru",
+              roleBadge: "badge-cyan",
+              role2: "petugas_piket",
+              role2Badge: "badge-purple",
+              class: "-",
+              status: "aktif",
+              statusBadge: "badge-green",
+              avatar: "https://placehold.co/100x100/F87171/FFFFFF?text=BU",
+            },
+            {
+              id: "user5",
+              name: "Citra Lestari",
+              email: "citra.l@guru.id",
+              userId: "G003",
+              role: "guru",
+              roleBadge: "badge-cyan",
+              role2: "petugas_piket",
+              role2Badge: "badge-purple",
+              class: "-",
+              status: "nonaktif",
+              statusBadge: "badge-gray",
+              avatar: "https://placehold.co/100x100/A78BFA/FFFFFF?text=CT",
+            },
+          ],
+
+          // === State Manajemen Kelas ===
+          classSearchQuery: "",
+          isClassModalOpen: false,
+          isEditingClass: false,
+          currentClass: {
+            id: null,
+            nama: "",
+            tingkat: "",
+            jurusan: "",
+            waliKelas: "",
+            jumlahSiswa: 0,
+          },
+          classes: [
+            {
+              id: "k1",
+              nama: "10 IPA 1",
+              tingkat: 10,
+              jurusan: "IPA",
+              waliKelas: "Anita Dewi",
+              jumlahSiswa: 32,
+            },
+            {
+              id: "k2",
+              nama: "10 IPS 2",
+              tingkat: 10,
+              jurusan: "IPS",
+              waliKelas: "Budi Santoso",
+              jumlahSiswa: 35,
+            },
+            {
+              id: "k3",
+              nama: "11 Bahasa",
+              tingkat: 11,
+              jurusan: "Bahasa",
+              waliKelas: "Citra Lestari",
+              jumlahSiswa: 28,
+            },
+            {
+              id: "k4",
+              nama: "12 IPA 3",
+              tingkat: 12,
+              jurusan: "IPA",
+              waliKelas: "Guru X",
+              jumlahSiswa: 30,
+            },
+          ],
+
+          // === Computed Properties ===
+          get filteredUsers() {
+            if (!Array.isArray(this.users)) {
+              console.warn(
+                "this.users is not an array during filteredUsers calculation."
+              );
+              return [];
+            }
+            return this.users.filter((user) => {
+              const typeMatch =
+                this.userManagementFilterType === "semua" ||
+                user.role === this.userManagementFilterType ||
+                (this.userManagementFilterType === "petugas_piket" &&
+                  user.role2 === "petugas_piket");
+              const statusMatch =
+                this.userManagementStatusFilter === "" ||
+                user.status === this.userManagementStatusFilter;
+              const classMatch = true;
+              const searchMatch =
+                this.userManagementSearchQuery === "" ||
+                user.name
+                  .toLowerCase()
+                  .includes(this.userManagementSearchQuery.toLowerCase()) ||
+                user.userId
+                  .toLowerCase()
+                  .includes(this.userManagementSearchQuery.toLowerCase());
+              return typeMatch && statusMatch && classMatch && searchMatch;
+            });
+          },
+          get filteredClasses() {
+            if (!Array.isArray(this.classes)) {
+              console.warn(
+                "this.classes is not an array during filteredClasses calculation."
+              );
+              return [];
+            }
+            if (!this.classSearchQuery) {
+              return this.classes;
+            }
+            const query = this.classSearchQuery.toLowerCase();
+            return this.classes.filter((kelas) => {
+              return (
+                kelas.nama.toLowerCase().includes(query) ||
+                (kelas.waliKelas &&
+                  kelas.waliKelas.toLowerCase().includes(query)) ||
+                kelas.jurusan.toLowerCase().includes(query)
+              );
+            });
+          },
+
+          // === Inisialisasi ===
+          init() {
+            console.log("Alpine component initialized.");
+            // Panggil render ikon setelah DOM siap di-render Alpine
+            this.$nextTick(() => {
+              this.renderIcons();
+              console.log("Initial icons rendered.");
+            });
+            // Inisialisasi chart jika tab aktif adalah dashboard
+            if (this.activeTab === "dashboard") {
+              this.initializeDashboardCharts();
+            }
+            this.updateFooterYear();
+            this.updateLastUpdatedTime();
+
+            // Setup Watchers
+            this.$watch("dashboardUserType", (newValue) => {
+              if (this.activeTab === "dashboard") {
+                console.log("Dashboard filter changed:", newValue);
+                this.initializeDashboardCharts();
+              }
+              this.$nextTick(() => this.renderIcons());
+            });
+            this.$watch("userManagementFilterType", (newValue) => {
+              console.log("User type filter changed:", newValue);
+              this.clearSelection();
+              this.$nextTick(() => this.renderIcons());
+            });
+            this.$watch("userManagementStatusFilter", (newValue) => {
+              console.log("User status filter changed:", newValue);
+              this.clearSelection();
+              this.$nextTick(() => this.renderIcons());
+            });
+            this.$watch("userManagementSearchQuery", (newValue) => {
+              console.log("User search query changed:", newValue);
+              this.clearSelection();
+              this.$nextTick(() => this.renderIcons());
+            });
+            this.$watch("activeTab", (newTab, oldTab) => {
+              console.log(`Tab changed from ${oldTab} to ${newTab}`);
+              if (newTab === "dashboard") {
+                this.updateLastUpdatedTime();
+                this.initializeDashboardCharts();
+              } else if (oldTab === "dashboard") {
+                this.destroyCharts();
+              }
+              if (newTab !== "pengguna") {
+                this.clearSelection();
+              }
+              if (newTab !== "kelas") {
+                this.closeClassModal();
+              } // Tutup modal jika pindah DARI tab kelas juga
+              this.$nextTick(() => this.renderIcons());
+            });
+            this.$watch("selectedUserIds", (newSelection) => {
+              if (!Array.isArray(this.filteredUsers)) return; // Tambahan safeguard
+              if (this.filteredUsers.length > 0) {
+                const filteredUserIds = this.filteredUsers.map((u) => u.id);
+                this.selectAllUsers =
+                  newSelection.length > 0 &&
+                  newSelection.length === filteredUserIds.length &&
+                  filteredUserIds.every((id) => newSelection.includes(id));
+              } else {
+                this.selectAllUsers = false;
+              }
+              console.log(
+                "Selection changed:",
+                newSelection,
+                "Select All:",
+                this.selectAllUsers
+              );
+            });
+            this.$watch("classSearchQuery", (newValue) => {
+              console.log("Class search query changed:", newValue);
+            });
+          },
+
+          // === Metode Helper ===
+          renderIcons() {
+            if (typeof lucide !== "undefined") {
+              console.log("Rendering Lucide icons...");
+              try {
+                lucide.createIcons();
+              } catch (e) {
+                console.error("Error rendering Lucide icons:", e);
+              }
+            } else {
+              console.warn("Lucide library not found.");
+            }
+          },
+          updateFooterYear() {
+            const el = document.getElementById("current-year");
+            if (el) el.textContent = new Date().getFullYear();
+          },
+          updateLastUpdatedTime() {
+            const el = document.getElementById("last-updated-time");
+            if (el && this.activeTab === "dashboard") {
+              const now = new Date();
+              el.textContent = now.toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+            }
+          },
+          initializeDashboardCharts() {
+            console.log("Attempting to initialize dashboard charts...");
+            if (typeof window.initCharts === "function") {
+              window.initCharts(this.dashboardUserType);
+            } else {
+              console.warn("Global initCharts function not found.");
+            }
+          },
+          destroyCharts() {
+            console.log("Destroying charts...");
+            if (window.totalAttendanceChartInstance) {
+              window.totalAttendanceChartInstance.destroy();
+              window.totalAttendanceChartInstance = null;
+              console.log("Total attendance chart destroyed.");
+            }
+            if (window.teacherSummaryChartInstance) {
+              window.teacherSummaryChartInstance.destroy();
+              window.teacherSummaryChartInstance = null;
+              console.log("Teacher summary chart destroyed.");
+            }
+          },
+          changeTab(tabName) {
+            if (this.activeTab !== tabName) {
+              this.activeTab = tabName;
+              this.isMobileMenuOpen = false;
+            }
+          }, // Watcher 'activeTab' akan handle sisanya
+
+          // === Metode Manajemen Pengguna ===
+          toggleSelection(userId) {
+            const index = this.selectedUserIds.indexOf(userId);
+            if (index > -1) {
+              this.selectedUserIds.splice(index, 1);
+            } else {
+              this.selectedUserIds.push(userId);
+            }
+          },
+          selectAllFilteredUsers(checked) {
+            if (!Array.isArray(this.filteredUsers)) return;
+            const filteredUserIds = this.filteredUsers.map((u) => u.id);
+            if (checked) {
+              this.selectedUserIds = [
+                ...new Set([...this.selectedUserIds, ...filteredUserIds]),
+              ];
+            } else {
+              this.selectedUserIds = this.selectedUserIds.filter(
+                (id) => !filteredUserIds.includes(id)
+              );
+            }
+          },
+          clearSelection() {
+            this.selectedUserIds = [];
+            this.selectAllUsers = false;
+          },
+          applyBulkAction(action) {
+            if (this.selectedUserIds.length === 0) {
+              alert("Pilih setidaknya satu pengguna.");
+              return;
+            }
+            const selectedNames = this.users
+              .filter((u) => this.selectedUserIds.includes(u.id))
+              .map((u) => u.name)
+              .join(", ");
+            let confirmationMessage = "";
+            switch (action) {
+              case "activate":
+                confirmationMessage = `Anda yakin ingin mengaktifkan pengguna berikut?\n${selectedNames}`;
+                break;
+              case "deactivate":
+                confirmationMessage = `Anda yakin ingin menonaktifkan pengguna berikut?\n${selectedNames}`;
+                break;
+              case "delete":
+                confirmationMessage = `PERINGATAN: Anda yakin ingin MENGHAPUS pengguna berikut secara permanen?\n${selectedNames}`;
+                break;
+              default:
+                return;
+            }
+            if (confirm(confirmationMessage)) {
+              console.log(
+                `Applying action "${action}" to users:`,
+                this.selectedUserIds
+              );
+              this.users = this.users.map((user) => {
+                if (this.selectedUserIds.includes(user.id)) {
+                  if (action === "activate")
+                    return {
+                      ...user,
+                      status: "aktif",
+                      statusBadge: "badge-green",
+                    };
+                  if (action === "deactivate")
+                    return {
+                      ...user,
+                      status: "nonaktif",
+                      statusBadge: "badge-gray",
+                    };
+                }
+                return user;
+              });
+              if (action === "delete") {
+                this.users = this.users.filter(
+                  (user) => !this.selectedUserIds.includes(user.id)
+                );
+              }
+              alert(
+                `Aksi "${action}" berhasil diterapkan pada ${this.selectedUserIds.length} pengguna.`
+              );
+              this.clearSelection();
+            }
+          },
+          viewUser(userId) {
+            const user = this.users.find((u) => u.id === userId);
+            alert(
+              `Lihat Detail Pengguna:\nNama: ${user.name}\nID: ${user.userId}\nRole: ${user.role}\nStatus: ${user.status}`
+            );
+          },
+          editUser(userId) {
+            const user = this.users.find((u) => u.id === userId);
+            alert(`Edit Pengguna:\nNama: ${user.name}`);
+          },
+          deleteUser(userId) {
+            const user = this.users.find((u) => u.id === userId);
+            if (
+              confirm(
+                `Anda yakin ingin menghapus pengguna "${user.name}" (${user.userId})?`
+              )
+            ) {
+              console.log("Deleting user:", userId);
+              this.users = this.users.filter((u) => u.id !== userId);
+              alert(`Pengguna "${user.name}" berhasil dihapus.`);
+              this.clearSelection();
+            }
+          },
+
+          // === Metode Manajemen Kelas ===
+          resetCurrentClass() {
+            this.currentClass = {
+              id: null,
+              nama: "",
+              tingkat: "",
+              jurusan: "",
+              waliKelas: "",
+              jumlahSiswa: 0,
+            };
+          },
+          openCreateClassModal() {
+            this.isEditingClass = false;
+            this.resetCurrentClass();
+            this.isClassModalOpen = true;
+            this.$nextTick(() => {
+              document.getElementById("namaKelas")?.focus();
+            });
+          },
+          openEditClassModal(classId) {
+            const kelasToEdit = this.classes.find((k) => k.id === classId);
+            if (kelasToEdit) {
+              this.isEditingClass = true;
+              this.currentClass = { ...kelasToEdit };
+              this.isClassModalOpen = true;
+              this.$nextTick(() => {
+                document.getElementById("namaKelas")?.focus();
+              });
+            } else {
+              console.error("Kelas tidak ditemukan:", classId);
+            }
+          },
+          closeClassModal() {
+            this.isClassModalOpen = false;
+          },
+          saveClass() {
+            if (
+              !this.currentClass.nama ||
+              !this.currentClass.tingkat ||
+              !this.currentClass.jurusan ||
+              this.currentClass.jumlahSiswa < 0
+            ) {
+              alert(
+                "Mohon lengkapi Nama, Tingkat, Jurusan, dan Jumlah Siswa valid."
+              );
+              return;
+            }
+            if (this.isEditingClass) {
+              const index = this.classes.findIndex(
+                (k) => k.id === this.currentClass.id
+              );
+              if (index > -1) {
+                this.classes[index] = { ...this.currentClass };
+                console.log("Kelas diperbarui:", this.classes[index]);
+              } else {
+                console.error("Gagal update kelas:", this.currentClass.id);
+              }
+            } else {
+              const newClass = { ...this.currentClass, id: "k" + Date.now() };
+              this.classes.push(newClass);
+              console.log("Kelas baru:", newClass);
+            }
+            this.closeClassModal();
+          },
+          deleteClass(classId) {
+            const kelasToDelete = this.classes.find((k) => k.id === classId);
+            if (!kelasToDelete) return;
+            if (
+              confirm(
+                `Anda yakin ingin menghapus kelas "${kelasToDelete.nama}"?`
+              )
+            ) {
+              this.classes = this.classes.filter((k) => k.id !== classId);
+              console.log("Kelas dihapus:", classId);
+              alert(`Kelas "${kelasToDelete.nama}" berhasil dihapus.`);
+            }
+          },
+        };
+      }
+
+      // --- Pendaftaran Komponen Alpine.js ---
+      document.addEventListener("alpine:init", () => {
+        console.log("Alpine initialized, registering component...");
+        Alpine.data("presensiApp", presensiAppData);
+      });
+
+      // --- Inisialisasi Lainnya (setelah DOM siap) ---
+      // Hapus listener ini karena renderIcons sudah dipanggil di init() via $nextTick
+      // document.addEventListener("DOMContentLoaded", () => {
+      //   console.log("DOM fully loaded and parsed");
+      // });
+    </script>
+  </body>
+</html>
