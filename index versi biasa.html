@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="id" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Presensi Sekolah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@heroicons/vue@2/dist/heroicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://cdn.jsdelivr.net/npm/@heroicons/vue@2/dist/heroicons.cjs.js"
+    ></script>
+
+    <style>
+      /* Custom scrollbar styling (optional, for Webkit browsers) */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Light mode track */
+        border-radius: 10px;
+      }
+      html.dark ::-webkit-scrollbar-track {
+        background: #2d3748; /* Dark mode track (gray-800) */
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #a0aec0; /* Light mode thumb (gray-400) */
+        border-radius: 10px;
+      }
+      html.dark ::-webkit-scrollbar-thumb {
+        background: #718096; /* Dark mode thumb (gray-500) */
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #718096; /* Light mode thumb hover (gray-500) */
+      }
+      html.dark ::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0; /* Dark mode thumb hover (gray-400) */
+      }
+
+      /* Style for active nav item (Top Nav) */
+      .top-nav-item.active {
+        background-color: #4338ca; /* indigo-700 */
+        color: #ffffff;
+      }
+      html.dark .top-nav-item.active {
+        background-color: #6366f1; /* indigo-500 */
+        color: #ffffff;
+      }
+
+      /* Style for active bottom nav item */
+      .bottom-nav-item.active {
+        color: #4f46e5; /* indigo-600 */
+      }
+      html.dark .bottom-nav-item.active {
+        color: #818cf8; /* indigo-400 */
+      }
+
+      /* Additional style for dropdown menu animation */
+      .transition-enter-active,
+      .transition-leave-active {
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .transition-enter-from,
+      .transition-leave-to {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      .transition-enter-to,
+      .transition-leave-from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+    ></script>
+  </head>
+  <body
+    class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased font-sans"
+    x-data="{ isMobileMenuOpen: false, isUserMenuOpen: false }"
+  >
+    <div class="flex flex-col h-screen">
+      <header
+        class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-30 border-b border-gray-200 dark:border-gray-700"
+        @click.away="isUserMenuOpen = false"
+      >
+        <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <!-- {/* --- Modified Flex Container for Centering Nav --- */} -->
+          <div class="relative flex justify-between items-center h-16">
+            <!-- {/* Left: Logo */} -->
+            <div class="absolute left-0 flex-shrink-0 flex items-center">
+              <!-- {/* Use absolute positioning for logo */} -->
+              <svg
+                class="h-8 w-auto text-indigo-600 dark:text-indigo-400"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <!-- {/* Placeholder Logo */} -->
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"
+                ></path>
+              </svg>
+              <h1
+                class="text-xl font-semibold text-indigo-600 dark:text-indigo-400 ml-2 hidden sm:block"
+              >
+                <!-- {/* Hide text on very small screens if needed */} Presensi -->
+                Penabur Presensi
+              </h1>
+            </div>
+
+            <!-- {/* Center: Desktop Navigation Links */} {/* This div will be
+            centered because the parent is relative and siblings are absolute
+            */} -->
+            <div
+              class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-center"
+            >
+              <nav class="hidden md:flex md:space-x-4">
+                <!-- {/* Dashboard Link */} -->
+                <a
+                  href="#"
+                  class="top-nav-item active px-3 py-2 rounded-md text-sm font-medium"
+                  aria-current="page"
+                >
+                  <svg
+                    class="inline h-5 w-5 mr-1 -mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Dashboard
+                </a>
+                <!-- {/* --- [MODIFIED] Combined User Management Link --- */} -->
+                <a
+                  href="#"
+                  class="top-nav-item text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <svg
+                    class="inline h-5 w-5 mr-1 -mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+                    />
+                  </svg>
+                  Manajemen Pengguna
+                  <!-- {/* Changed Name */} -->
+                </a>
+                <!-- {/* --- End Combined Link --- */} -->
+                <a
+                  href="#"
+                  class="top-nav-item text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <svg
+                    class="inline h-5 w-5 mr-1 -mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M2 4.25A2.25 2.25 0 0 1 4.25 2h11.5A2.25 2.25 0 0 1 18 4.25v8.5A2.25 2.25 0 0 1 15.75 15h-3.19l-1.72 1.72a.75.75 0 0 1-1.06 0L8.06 15H4.25A2.25 2.25 0 0 1 2 12.75v-8.5ZM4.25 4a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h3.81a.75.75 0 0 1 .53.22l1.44 1.44 1.44-1.44a.75.75 0 0 1 .53-.22h3.81a.25.25 0 0 0 .25-.25v-8.5a.25.25 0 0 0-.25-.25H4.25Z"
+                      clip-rule="evenodd"
+                    />
+                    <path
+                      d="M6.75 6a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75ZM6 9.75A.75.75 0 0 1 6.75 9h5a.75.75 0 0 1 0 1.5h-5A.75.75 0 0 1 6 9.75Z"
+                    />
+                  </svg>
+                  Manajemen Kelas
+                </a>
+                <a
+                  href="#"
+                  class="top-nav-item text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <svg
+                    class="inline h-5 w-5 mr-1 -mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3.5 3.75a.75.75 0 0 0-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 0 0 0-1.5H3.5V3.75Z"
+                    />
+                    <path
+                      d="M6.25 7.5a.75.75 0 0 0-1.5 0v6.25a.75.75 0 0 0 1.5 0V7.5ZM9.25 5.5a.75.75 0 0 0-1.5 0v8.25a.75.75 0 0 0 1.5 0V5.5Zm3-2a.75.75 0 0 0-1.5 0v10.25a.75.75 0 0 0 1.5 0V3.5Zm3 4a.75.75 0 0 0-1.5 0v6.25a.75.75 0 0 0 1.5 0V7.5Z"
+                    />
+                  </svg>
+                  Laporan Presensi
+                </a>
+                <!-- <a
+                  href="#"
+                  class="top-nav-item text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  <svg
+                    class="inline h-5 w-5 mr-1 -mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M11.49 3.17a.75.75 0 0 1 1.02.67l.41 2.44a.75.75 0 0 0 1.416.03l1.868-1.65a.75.75 0 1 1 1.02 1.1l-1.65 1.867a.75.75 0 0 0 .03 1.416l2.44.41a.75.75 0 0 1 .67 1.02l-1.1 1.905a.75.75 0 0 1-1.28.51l-1.932-1.348a.75.75 0 0 0-.976 0l-1.932 1.348a.75.75 0 0 1-1.28-.51l-1.1-1.905a.75.75 0 0 1 .67-1.02l2.44-.41a.75.75 0 0 0 .03-1.416l-1.65-1.867a.75.75 0 1 1 1.02-1.1l1.868 1.65a.75.75 0 0 0 1.416-.03l.41-2.44Zm-1.38 7.03a3.25 3.25 0 1 1-6.5 0 3.25 3.25 0 0 1 6.5 0ZM10 11.75a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  Pengaturan
+                </a> -->
+              </nav>
+            </div>
+
+            <!-- {/* Right: Icons & User Menu */} -->
+            <div
+              class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0"
+            >
+              <div class="flex items-center space-x-3">
+                <!-- {/* Search Icon */} -->
+                <button
+                  type="button"
+                  title="Cari"
+                  class="hidden sm:inline-flex text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                    />
+                  </svg>
+                  <span class="sr-only">Cari</span>
+                </button>
+                <!-- {/* Notification Icon */} -->
+                <button
+                  type="button"
+                  title="Notifikasi"
+                  class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 relative"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                    />
+                  </svg>
+                  <span
+                    class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800"
+                  ></span>
+                  <!-- {/* Dummy badge */} -->
+                  <span class="sr-only">Notifikasi</span>
+                </button>
+                <!-- {/* Theme Toggle */} -->
+                <button
+                  id="theme-toggle"
+                  type="button"
+                  title="Toggle theme"
+                  class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 transition-colors duration-200"
+                >
+                  <svg
+                    id="theme-toggle-dark-icon"
+                    class="w-5 h-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M7.455 1.755a.75.75 0 0 1 .82 1.336l-.316.948a.75.75 0 0 0 1.336.82l.949-.316a.75.75 0 0 1 1.336.82l-.316.949a.75.75 0 0 0 .82 1.336l.948-.316a.75.75 0 0 1 .82 1.336l-.316.948a.75.75 0 0 0 1.336.82l.949-.316a.75.75 0 1 1 .512 1.414l-.949.316a.75.75 0 0 0-.82 1.336l.316.948a.75.75 0 1 1-1.414.512l-.316-.949a.75.75 0 0 0-1.336.82l.316.948a.75.75 0 1 1-1.414.512l-.316-.948a.75.75 0 0 0-.82-1.336l-.948.316a.75.75 0 1 1-.512-1.414l.948-.316a.75.75 0 0 0 .82-1.336l-.316-.949a.75.75 0 1 1 1.414-.512l.316.948a.75.75 0 0 0 1.336-.82l-.316-.948a.75.75 0 0 1-.82-1.336l-.948.316a.75.75 0 0 1-1.336-.82l.316-.949a.75.75 0 0 0-.82-1.336l-.948.316a.75.75 0 0 1-1.414-.512l.948-.316a.75.75 0 0 0 1.336-.82L7.455 1.755Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <svg
+                    id="theme-toggle-light-icon"
+                    class="w-5 h-5 hidden"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM5.404 15.657a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM6.464 6.464a.75.75 0 0 0 1.06-1.06l-1.06-1.06a.75.75 0 1 0-1.061 1.06l1.06 1.06Z"
+                    />
+                  </svg>
+                  <span class="sr-only">Toggle theme</span>
+                </button>
+                <!-- {/* User Menu */} -->
+                <div class="relative">
+                  <button
+                    @click="isUserMenuOpen = !isUserMenuOpen"
+                    type="button"
+                    class="max-w-xs bg-gray-100 dark:bg-gray-700 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-700 focus:ring-indigo-500"
+                    id="user-menu-button"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                  >
+                    <span class="sr-only">Buka menu user</span>
+                    <img
+                      class="h-8 w-8 rounded-full object-cover"
+                      src="https://placehold.co/100x100/4F46E5/FFFFFF?text=A"
+                      alt="Admin Avatar"
+                      onerror="this.onerror=null; this.src='https://placehold.co/100x100/cccccc/ffffff?text=Error';"
+                    />
+                  </button>
+                  <div
+                    x-show="isUserMenuOpen"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-100 transition-enter-active"
+                    x-transition:enter-start="transform opacity-0 scale-95 transition-enter-from"
+                    x-transition:enter-end="transform opacity-100 scale-100 transition-enter-to"
+                    x-transition:leave="transition ease-in duration-75 transition-leave-active"
+                    x-transition:leave-start="transform opacity-100 scale-100 transition-leave-from"
+                    x-transition:leave-end="transform opacity-0 scale-95 transition-leave-to"
+                    class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="user-menu-button"
+                    tabindex="-1"
+                  >
+                    <a
+                      href="#"
+                      class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                      tabindex="-1"
+                      >Profil Anda</a
+                    >
+                    <a
+                      href="#"
+                      class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                      tabindex="-1"
+                      >Pengaturan Akun</a
+                    >
+                    <a
+                      href="#"
+                      class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+                      role="menuitem"
+                      tabindex="-1"
+                      >Keluar</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- {/* Mobile Menu Button (stays on the right for mobile) */} -->
+            <div class="absolute inset-y-0 right-0 flex items-center md:hidden">
+              <button
+                @click="isMobileMenuOpen = !isMobileMenuOpen"
+                id="mobile-menu-button"
+                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                aria-controls="mobile-menu"
+                aria-expanded="false"
+              >
+                <span class="sr-only">Buka menu utama</span>
+                <svg
+                  x-show="!isMobileMenuOpen"
+                  class="block h-6 w-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                  />
+                </svg>
+                <svg
+                  x-show="isMobileMenuOpen"
+                  class="block h-6 w-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18 18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- {/* Mobile Menu Dropdown */} -->
+        <div
+          x-show="isMobileMenuOpen"
+          x-cloak
+          class="md:hidden border-t border-gray-200 dark:border-gray-700"
+          id="mobile-menu"
+        >
+          <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <a
+              href="#"
+              class="bg-indigo-600 text-white block px-3 py-2 rounded-md text-base font-medium"
+              aria-current="page"
+              >Dashboard</a
+            >
+            <!-- {/* --- [MODIFIED] Mobile Combined Link --- */} -->
+            <a
+              href="#"
+              class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >Manajemen Pengguna</a
+            >
+            <!-- {/* --- End Mobile Combined Link --- */} -->
+            <a
+              href="#"
+              class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >Manajemen Kelas</a
+            >
+            <a
+              href="#"
+              class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >Laporan Presensi</a
+            >
+            <a
+              href="#"
+              class="text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >Pengaturan</a
+            >
+          </div>
+        </div>
+      </header>
+
+      <!-- {/* Main Content Area */} -->
+      <main class="flex-1 overflow-y-auto pb-16 md:pb-0">
+        <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+          <!-- {/* Header section with Title and Date Filter */} -->
+          <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4"
+          >
+            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+              Dashboard Admin
+            </h2>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-400"
+                >Tampilkan:</span
+              >
+              <select
+                class="text-sm rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+              >
+                <option>Hari Ini</option>
+                <option>Minggu Ini</option>
+                <option>Bulan Ini</option>
+                <option>Semester Ini</option>
+              </select>
+              <!-- {/* Optional: Custom Date Range Picker Button */} {/* -->
+              <button
+                title="Pilih Rentang Tanggal"
+                class="text-sm p-1.5 border rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+              >
+                <svg
+                  class="w-4 h-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="1.5"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
+                  />
+                </svg>
+              </button>
+              <!-- */} -->
+            </div>
+          </div>
+
+          <!-- {/* Top Row Cards */} -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- {/* Card Siswa Hari Ini */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition-shadow duration-300 hover:shadow-lg"
+            >
+              <h3
+                class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider"
+              >
+                Siswa Hari Ini
+              </h3>
+              <div class="flex justify-between items-start mb-1">
+                <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                  1195
+                  <span
+                    class="text-lg font-medium text-green-600 dark:text-green-400"
+                    >Hadir</span
+                  >
+                </p>
+                <span
+                  class="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50"
+                >
+                  <svg
+                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                <strong class="text-red-600 dark:text-red-400">55</strong>
+                Absen,
+                <strong class="text-yellow-600 dark:text-yellow-400">25</strong>
+                Terlambat
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Total Siswa: 1250
+              </p>
+            </div>
+            <!-- {/* Card Guru Hari Ini */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition-shadow duration-300 hover:shadow-lg"
+            >
+              <h3
+                class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider"
+              >
+                Guru Hari Ini
+              </h3>
+              <div class="flex justify-between items-start mb-1">
+                <p class="text-3xl font-bold text-gray-900 dark:text-white">
+                  78
+                  <span
+                    class="text-lg font-medium text-green-600 dark:text-green-400"
+                    >Hadir</span
+                  >
+                </p>
+                <span class="p-2 rounded-full bg-teal-100 dark:bg-teal-900/50">
+                  <svg
+                    class="h-6 w-6 text-teal-600 dark:text-teal-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M15.94 4.06a.75.75 0 0 1 0 1.06L8.06 13.94a.75.75 0 0 1-1.06 0L4.06 10.94a.75.75 0 1 1 1.06-1.06L7.5 12.31l7.38-7.38a.75.75 0 0 1 1.06 0ZM5 18.25a.75.75 0 0 0 1.5 0v-2.5a.75.75 0 0 0-1.5 0v2.5Z"
+                      clip-rule="evenodd"
+                    />
+                    <path
+                      d="M3 10a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 10Z"
+                    />
+                    <path
+                      d="M17 3.75a2.25 2.25 0 0 0-2.25-2.25h-10A2.25 2.25 0 0 0 2.5 3.75v12.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V3.75ZM4.75 16.25a.75.75 0 0 1 .75-.75h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75Z"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                <strong class="text-red-600 dark:text-red-400">2</strong> Absen,
+                <strong class="text-blue-600 dark:text-blue-400">3</strong>
+                Tugas Luar
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Total Guru: 83
+              </p>
+            </div>
+            <!-- {/* Card % Kehadiran Siswa */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition-shadow duration-300 hover:shadow-lg"
+            >
+              <h3
+                class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider"
+              >
+                % Kehadiran Siswa
+              </h3>
+              <div class="flex justify-between items-center mb-2">
+                <p
+                  class="text-4xl font-bold text-green-600 dark:text-green-400"
+                >
+                  95.6%
+                </p>
+                <span
+                  class="text-xs text-green-600 dark:text-green-400 flex items-center bg-green-100 dark:bg-green-900/50 px-2 py-0.5 rounded-full"
+                >
+                  <svg
+                    class="w-3 h-3 mr-1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 17a.75.75 0 0 1-.75-.75V5.612L5.28 9.58a.75.75 0 0 1-1.06-1.06l5.25-5.25a.75.75 0 0 1 1.06 0l5.25 5.25a.75.75 0 1 1-1.06 1.06L10.75 5.612V16.25a.75.75 0 0 1-.75.75Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  +1.2% <span class="sr-only">vs kemarin</span>
+                </span>
+              </div>
+              <div
+                class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700 mt-3"
+              >
+                <div
+                  class="bg-green-500 h-2 rounded-full"
+                  style="width: 95.6%"
+                ></div>
+              </div>
+            </div>
+            <!-- {/* Card % Kehadiran Guru */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 transition-shadow duration-300 hover:shadow-lg"
+            >
+              <h3
+                class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider"
+              >
+                % Kehadiran Guru
+              </h3>
+              <div class="flex justify-between items-center mb-2">
+                <p
+                  class="text-4xl font-bold text-green-600 dark:text-green-400"
+                >
+                  94.0%
+                </p>
+                <span
+                  class="text-xs text-red-600 dark:text-red-400 flex items-center bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full"
+                >
+                  <svg
+                    class="w-3 h-3 mr-1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 3a.75.75 0 0 1 .75.75v10.638l3.97-3.968a.75.75 0 1 1 1.06 1.06l-5.25 5.25a.75.75 0 0 1-1.06 0l-5.25-5.25a.75.75 0 1 1 1.06-1.06l3.97 3.968V3.75A.75.75 0 0 1 10 3Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  -0.5% <span class="sr-only">vs kemarin</span>
+                </span>
+              </div>
+              <div
+                class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700 mt-3"
+              >
+                <div
+                  class="bg-green-500 h-2 rounded-full"
+                  style="width: 94%"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- {/* Second Row: Charts & Activity */} -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- {/* Komposisi Kehadiran Siswa Chart */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4"
+              >
+                Komposisi Kehadiran Siswa
+              </h3>
+              <div class="h-64 flex justify-center items-center relative">
+                <canvas id="studentAttendanceChart"></canvas>
+              </div>
+            </div>
+            <!-- {/* Komposisi Kehadiran Guru Chart */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4"
+              >
+                Komposisi Kehadiran Guru
+              </h3>
+              <div class="h-64 flex justify-center items-center relative">
+                <canvas id="teacherAttendanceChart"></canvas>
+              </div>
+            </div>
+            <!-- {/* Aktivitas Absensi Terbaru */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 flex flex-col"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex-shrink-0"
+              >
+                Aktivitas Absensi Terbaru
+              </h3>
+              <div
+                class="space-y-3 flex-grow overflow-y-auto pr-2 custom-scrollbar"
+                style="max-height: 260px"
+              >
+                <!-- {/* Added max-height */} {/* Activity Items... */} -->
+                <div
+                  class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors duration-150"
+                >
+                  <div class="flex items-center space-x-3 overflow-hidden">
+                    <span
+                      class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center"
+                      ><svg
+                        class="w-5 h-5 text-red-600 dark:text-red-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"
+                          clip-rule="evenodd"
+                        /></svg
+                    ></span>
+                    <div class="min-w-0">
+                      <p
+                        class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
+                      >
+                        Budi Santoso (Siswa)
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Kelas 11 IPA 2 - Alfa
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2"
+                    >5m</span
+                  >
+                </div>
+                <div
+                  class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors duration-150"
+                >
+                  <div class="flex items-center space-x-3 overflow-hidden">
+                    <span
+                      class="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center"
+                      ><svg
+                        class="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
+                          clip-rule="evenodd"
+                        /></svg
+                    ></span>
+                    <div class="min-w-0">
+                      <p
+                        class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
+                      >
+                        Citra Lestari (Siswa)
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Kelas 10 IPS 1 - Terlambat 15m
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2"
+                    >10m</span
+                  >
+                </div>
+                <div
+                  class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors duration-150"
+                >
+                  <div class="flex items-center space-x-3 overflow-hidden">
+                    <span
+                      class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center"
+                      ><svg
+                        class="w-5 h-5 text-blue-600 dark:text-blue-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M6 3.75A2.75 2.75 0 0 1 8.75 1h2.5A2.75 2.75 0 0 1 14 3.75v.443c.57.255 1.055.672 1.428 1.194l.22.304a.75.75 0 0 1-.91.61l-.22-.303a3.24 3.24 0 0 0-1.066-.81V3.75a1.25 1.25 0 0 0-1.25-1.25h-2.5A1.25 1.25 0 0 0 7.5 3.75v.443c-.57.255-1.055.672-1.428 1.194l-.22.304a.75.75 0 1 1-.91-.61l.22-.303c.373-.522.858-.94 1.428-1.194V3.75ZM3.162 6.07A4.75 4.75 0 0 1 7.5 5.25h5a4.75 4.75 0 0 1 4.338.82.75.75 0 0 1-.82 1.257 3.25 3.25 0 0 0-3.518-.57V8.75a.75.75 0 0 1-1.5 0V6.75a.75.75 0 0 1 1.5 0v.173c.503.115.98.33 1.394.614a.75.75 0 0 1-.74 1.318A3.25 3.25 0 0 0 12.5 8.25h-5a3.25 3.25 0 0 0-2.656.577.75.75 0 0 1-.82-1.257A4.73 4.73 0 0 1 3.162 6.07Z"
+                          clip-rule="evenodd"
+                        />
+                        <path
+                          d="M3 10.25a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 .75.75v6.5A2.75 2.75 0 0 1 14.25 19H5.75A2.75 2.75 0 0 1 3 16.25v-6ZM4.5 11.5a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75Z"
+                        /></svg
+                    ></span>
+                    <div class="min-w-0">
+                      <p
+                        class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
+                      >
+                        Ahmad Dahlan (Guru)
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Matematika - Tugas Luar
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2"
+                    >30m</span
+                  >
+                </div>
+                <div
+                  class="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-md transition-colors duration-150"
+                >
+                  <div class="flex items-center space-x-3 overflow-hidden">
+                    <span
+                      class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center"
+                      ><svg
+                        class="w-5 h-5 text-orange-600 dark:text-orange-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm-.75-4.75a.75.75 0 0 0 1.5 0V8.66l1.95 2.437a.75.75 0 1 0 1.2-1.06l-2.5-3.125a.75.75 0 0 0-1.137-.08L8.05 10.027a.75.75 0 1 0 1.196.946L10 9.736v3.514Z"
+                          clip-rule="evenodd"
+                        /></svg
+                    ></span>
+                    <div class="min-w-0">
+                      <p
+                        class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate"
+                      >
+                        Siti Aminah (Siswa)
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Kelas 12 Bahasa - Sakit
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-2"
+                    >1h</span
+                  >
+                </div>
+              </div>
+              <div class="mt-4 flex-shrink-0 text-center">
+                <a
+                  href="#"
+                  class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium hover:underline"
+                  >Lihat Semua Aktivitas</a
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- {/* Third Row: Class Attendance & Announcements */} -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- {/* Kehadiran Siswa per Kelas Chart */} -->
+            <div
+              class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+            >
+              <div class="flex justify-between items-center mb-4">
+                <h3
+                  class="text-lg font-semibold text-gray-800 dark:text-gray-200"
+                >
+                  Kehadiran Siswa per Kelas (%)
+                </h3>
+                <button
+                  type="button"
+                  title="Ekspor Data"
+                  class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium p-1.5 rounded hover:bg-indigo-50 dark:hover:bg-gray-700"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                    />
+                  </svg>
+                  <span class="sr-only">Ekspor Data</span>
+                </button>
+              </div>
+              <div class="h-80 relative">
+                <canvas id="attendanceByClassChart"></canvas>
+              </div>
+            </div>
+
+            <!-- {/* --- [MODIFIED] Pengumuman Sekolah with Dummy Data --- */} -->
+            <div
+              class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4"
+              >
+                Pengumuman Sekolah
+              </h3>
+              <div class="space-y-4">
+                <!-- {/* Dummy Announcement 1 */} -->
+                <div
+                  class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 flex items-start space-x-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A.75.75 0 0 0 10 14a.75.75 0 0 0 .744-.894l.459-2.066a.25.25 0 0 1 .244-.304H11a.75.75 0 0 0 0-1.5H9Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p
+                      class="text-sm font-medium text-blue-800 dark:text-blue-300"
+                    >
+                      Libur Awal Puasa
+                    </p>
+                    <p class="text-xs text-blue-600 dark:text-blue-400">
+                      Senin, 25 April 2025 - Selasa, 26 April 2025
+                    </p>
+                  </div>
+                </div>
+                <!-- {/* Dummy Announcement 2 */} -->
+                <div
+                  class="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800 flex items-start space-x-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-yellow-500 dark:text-yellow-400 flex-shrink-0 mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625l6.28-10.875ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm0-8a1 1 0 0 1 1 1v3a1 1 0 0 1-2 0V8a1 1 0 0 1 1-1Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p
+                      class="text-sm font-medium text-yellow-800 dark:text-yellow-300"
+                    >
+                      Peringatan: Batas Akhir Pembayaran SPP
+                    </p>
+                    <p class="text-xs text-yellow-600 dark:text-yellow-400">
+                      Jatuh tempo pada 30 April 2025
+                    </p>
+                  </div>
+                </div>
+                <!-- {/* Dummy Announcement 3 */} -->
+                <div
+                  class="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800 flex items-start space-x-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0 mt-0.5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M10 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3.465 14.493a1.23 1.23 0 0 0 .41 1.412A9.957 9.957 0 0 0 10 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 0 0-13.074.003Z"
+                    />
+                  </svg>
+                  <div>
+                    <p
+                      class="text-sm font-medium text-green-800 dark:text-green-300"
+                    >
+                      Rapat Wali Murid Kelas 10
+                    </p>
+                    <p class="text-xs text-green-600 dark:text-green-400">
+                      Sabtu, 26 April 2025 - 09:00 WIB di Aula
+                    </p>
+                  </div>
+                </div>
+                <!-- {/* Link to see all */} -->
+                <div class="pt-2">
+                  <button
+                    type="button"
+                    class="w-full text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    Lihat Semua Pengumuman
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- {/* --- End Pengumuman Sekolah --- */} -->
+          </div>
+        </div>
+
+        <!-- {/* Footer */} -->
+        <footer
+          class="p-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 mt-auto"
+        >
+          &copy; <span id="current-year"></span> Presensi Sekolah. Hak Cipta
+          Dilindungi.
+        </footer>
+      </main>
+
+      <!-- {/* Bottom Navigation (Mobile Only) */} -->
+      <nav
+        class="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-20"
+      >
+        <div
+          class="flex justify-around items-center h-16 max-w-md mx-auto px-2"
+        >
+          <a
+            href="#"
+            class="bottom-nav-item active flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded-md transition-colors duration-150"
+            aria-current="page"
+          >
+            <svg
+              class="h-6 w-6 mb-1"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span class="text-xs font-medium">Dashboard</span>
+          </a>
+          <!-- {/* --- [MODIFIED] Bottom Nav Combined Link --- */} -->
+          <a
+            href="#"
+            class="bottom-nav-item flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded-md transition-colors duration-150"
+          >
+            <svg
+              class="h-6 w-6 mb-1"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+              />
+            </svg>
+            <span class="text-xs font-medium">Pengguna</span>
+            <!-- {/* Changed Name*/} -->
+          </a>
+          <!-- {/* --- End Bottom Nav Combined Link --- */} -->
+          <a
+            href="#"
+            class="bottom-nav-item flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded-md transition-colors duration-150"
+          >
+            <svg
+              class="h-6 w-6 mb-1"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M3.5 3.75a.75.75 0 0 0-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 0 0 0-1.5H3.5V3.75Z"
+              />
+              <path
+                d="M6.25 7.5a.75.75 0 0 0-1.5 0v6.25a.75.75 0 0 0 1.5 0V7.5ZM9.25 5.5a.75.75 0 0 0-1.5 0v8.25a.75.75 0 0 0 1.5 0V5.5Zm3-2a.75.75 0 0 0-1.5 0v10.25a.75.75 0 0 0 1.5 0V3.5Zm3 4a.75.75 0 0 0-1.5 0v6.25a.75.75 0 0 0 1.5 0V7.5Z"
+              />
+            </svg>
+            <span class="text-xs font-medium">Laporan</span>
+          </a>
+          <a
+            href="#"
+            class="bottom-nav-item flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1 rounded-md transition-colors duration-150"
+          >
+            <svg
+              class="h-6 w-6 mb-1"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M11.49 3.17a.75.75 0 0 1 1.02.67l.41 2.44a.75.75 0 0 0 1.416.03l1.868-1.65a.75.75 0 1 1 1.02 1.1l-1.65 1.867a.75.75 0 0 0 .03 1.416l2.44.41a.75.75 0 0 1 .67 1.02l-1.1 1.905a.75.75 0 0 1-1.28.51l-1.932-1.348a.75.75 0 0 0-.976 0l-1.932 1.348a.75.75 0 0 1-1.28-.51l-1.1-1.905a.75.75 0 0 1 .67-1.02l2.44-.41a.75.75 0 0 0 .03-1.416l-1.65-1.867a.75.75 0 1 1 1.02-1.1l1.868 1.65a.75.75 0 0 0 1.416-.03l.41-2.44Zm-1.38 7.03a3.25 3.25 0 1 1-6.5 0 3.25 3.25 0 0 1 6.5 0ZM10 11.75a1.75 1.75 0 1 0 0-3.5 1.75 1.75 0 0 0 0 3.5Z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <span class="text-xs font-medium">Pengaturan</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // === Element References ===
+        const themeToggleBtn = document.getElementById("theme-toggle");
+        const themeToggleDarkIcon = document.getElementById(
+          "theme-toggle-dark-icon"
+        );
+        const themeToggleLightIcon = document.getElementById(
+          "theme-toggle-light-icon"
+        );
+        const htmlElement = document.documentElement;
+        const currentYearSpan = document.getElementById("current-year");
+        const bottomNavItems = document.querySelectorAll(".bottom-nav-item");
+        const topNavItems = document.querySelectorAll(".top-nav-item");
+
+        // === Theme Management ===
+        const isDarkMode = () => localStorage.getItem("theme") === "dark";
+        const applyTheme = () => {
+          if (isDarkMode()) {
+            htmlElement.classList.add("dark");
+            themeToggleDarkIcon?.classList.add("hidden");
+            themeToggleLightIcon?.classList.remove("hidden");
+          } else {
+            htmlElement.classList.remove("dark");
+            themeToggleDarkIcon?.classList.remove("hidden");
+            themeToggleLightIcon?.classList.add("hidden");
+          }
+          updateAllChartThemes();
+        };
+        const toggleTheme = () => {
+          const willBeDark = !htmlElement.classList.contains("dark");
+          localStorage.setItem("theme", willBeDark ? "dark" : "light");
+          applyTheme();
+        };
+        applyTheme();
+        themeToggleBtn?.addEventListener("click", toggleTheme);
+
+        // === Footer Year ===
+        if (currentYearSpan) {
+          currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+        // === Navigation Active State (Simplified) ===
+        topNavItems.forEach((item) => {
+          item.addEventListener("click", (e) => {
+            topNavItems.forEach((el) =>
+              el.classList.remove(
+                "active",
+                "bg-indigo-700",
+                "text-white",
+                "dark:bg-indigo-500"
+              )
+            );
+            topNavItems.forEach((el) =>
+              el.classList.add(
+                "text-gray-500",
+                "hover:bg-gray-100",
+                "hover:text-gray-900",
+                "dark:text-gray-400",
+                "dark:hover:bg-gray-700",
+                "dark:hover:text-white"
+              )
+            );
+            item.classList.add(
+              "active",
+              "bg-indigo-700",
+              "text-white",
+              "dark:bg-indigo-500"
+            );
+            item.classList.remove(
+              "text-gray-500",
+              "hover:bg-gray-100",
+              "hover:text-gray-900",
+              "dark:text-gray-400",
+              "dark:hover:bg-gray-700",
+              "dark:hover:text-white"
+            );
+            item.setAttribute("aria-current", "page");
+            topNavItems.forEach((el) => {
+              if (el !== item) el.removeAttribute("aria-current");
+            });
+          });
+        });
+        bottomNavItems.forEach((item) => {
+          item.addEventListener("click", (e) => {
+            bottomNavItems.forEach((el) => el.classList.remove("active"));
+            item.classList.add("active");
+            item.setAttribute("aria-current", "page");
+            bottomNavItems.forEach((el) => {
+              if (el !== item) el.removeAttribute("aria-current");
+            });
+          });
+        });
+
+        // === Chart.js Setup ===
+        let studentChartInstance = null;
+        let teacherChartInstance = null;
+        let classChartInstance = null;
+        const colorPrimary = "#4F46E5";
+        const colorSecondary = "#10B981";
+        const colorWarning = "#F59E0B";
+        const colorDanger = "#EF4444";
+        const colorInfo = "#3B82F6";
+        const colorOrange = "#F97316";
+        const colorIndigo = "#6366F1";
+        const getCurrentThemeColors = () => {
+          const isDark = htmlElement.classList.contains("dark");
+          return {
+            borderColor: isDark ? "#1f2937" : "#ffffff",
+            textColor: isDark ? "#D1D5DB" : "#4B5563",
+            gridColor: isDark
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(0, 0, 0, 0.1)",
+          };
+        };
+        const updateAllChartThemes = () => {
+          const themeColors = getCurrentThemeColors();
+          const updateChart = (chart) => {
+            if (!chart) return;
+            if (chart.config.type === "doughnut") {
+              chart.config.data.datasets.forEach((dataset) => {
+                dataset.borderColor = themeColors.borderColor;
+              });
+            }
+            if (chart.options.scales) {
+              Object.values(chart.options.scales).forEach((axis) => {
+                if (axis.ticks) axis.ticks.color = themeColors.textColor;
+                if (axis.grid) axis.grid.color = themeColors.gridColor;
+              });
+            }
+            if (chart.options.plugins?.legend?.labels) {
+              chart.options.plugins.legend.labels.color = themeColors.textColor;
+            }
+            chart.update("none");
+          };
+          updateChart(studentChartInstance);
+          updateChart(teacherChartInstance);
+          updateChart(classChartInstance);
+        };
+
+        // Initialize Charts
+        const studentCtx = document
+          .getElementById("studentAttendanceChart")
+          ?.getContext("2d");
+        if (studentCtx) {
+          const initialThemeColors = getCurrentThemeColors();
+          studentChartInstance = new Chart(studentCtx, {
+            type: "doughnut",
+            data: {
+              labels: ["Hadir", "Terlambat", "Izin", "Sakit", "Alfa"],
+              datasets: [
+                {
+                  label: "Kehadiran Siswa",
+                  data: [1195, 25, 15, 10, 30],
+                  backgroundColor: [
+                    colorSecondary,
+                    colorWarning,
+                    colorInfo,
+                    colorOrange,
+                    colorDanger,
+                  ],
+                  borderColor: initialThemeColors.borderColor,
+                  borderWidth: 3,
+                  hoverOffset: 8,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: { duration: 500 },
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    color: initialThemeColors.textColor,
+                    boxWidth: 12,
+                    padding: 20,
+                    font: { size: 11 },
+                  },
+                },
+              },
+              cutout: "65%",
+            },
+          });
+        }
+        const teacherCtx = document
+          .getElementById("teacherAttendanceChart")
+          ?.getContext("2d");
+        if (teacherCtx) {
+          const initialThemeColors = getCurrentThemeColors();
+          teacherChartInstance = new Chart(teacherCtx, {
+            type: "doughnut",
+            data: {
+              labels: ["Hadir", "Izin", "Sakit", "Tugas Luar", "Alfa"],
+              datasets: [
+                {
+                  label: "Kehadiran Guru",
+                  data: [78, 1, 1, 3, 0],
+                  backgroundColor: [
+                    colorSecondary,
+                    colorInfo,
+                    colorOrange,
+                    colorIndigo,
+                    colorDanger,
+                  ],
+                  borderColor: initialThemeColors.borderColor,
+                  borderWidth: 3,
+                  hoverOffset: 8,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: { duration: 500 },
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: {
+                    color: initialThemeColors.textColor,
+                    boxWidth: 12,
+                    padding: 20,
+                    font: { size: 11 },
+                  },
+                },
+              },
+              cutout: "65%",
+            },
+          });
+        }
+        const classCtx = document
+          .getElementById("attendanceByClassChart")
+          ?.getContext("2d");
+        if (classCtx) {
+          const initialThemeColors = getCurrentThemeColors();
+          classChartInstance = new Chart(classCtx, {
+            type: "bar",
+            data: {
+              labels: [
+                "10 IPA 1",
+                "10 IPA 2",
+                "10 IPS 1",
+                "11 IPA 1",
+                "11 IPS 2",
+                "12 IPA 3",
+                "12 IPS 1",
+              ],
+              datasets: [
+                {
+                  label: "Kehadiran Siswa (%)",
+                  data: [98, 95, 96, 94, 97, 93, 99],
+                  backgroundColor: colorPrimary,
+                  borderColor: colorPrimary,
+                  borderWidth: 1,
+                  borderRadius: 4,
+                  barThickness: "flex",
+                  maxBarThickness: 25,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: "y",
+              animation: { duration: 500 },
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  max: 100,
+                  grid: {
+                    color: initialThemeColors.gridColor,
+                    borderColor: initialThemeColors.gridColor,
+                  },
+                  ticks: {
+                    color: initialThemeColors.textColor,
+                    callback: (value) => value + "%",
+                    font: { size: 11 },
+                  },
+                },
+                y: {
+                  grid: { display: false },
+                  ticks: {
+                    color: initialThemeColors.textColor,
+                    font: { size: 11 },
+                  },
+                },
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (context) =>
+                      `${context.dataset.label || ""}: ${
+                        context.parsed.x !== null
+                          ? context.parsed.x.toFixed(1) + "%"
+                          : ""
+                      }`,
+                  },
+                },
+              },
+            },
+          });
+        }
+        updateAllChartThemes(); // Initial call
+      }); // End DOMContentLoaded
+    </script>
+  </body>
+</html>
